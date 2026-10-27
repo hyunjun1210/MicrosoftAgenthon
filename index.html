@@ -1,45 +1,318 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AI Creative Agent</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#fbf8ff" />
+  <title>AI Creative Agent | 나만의 작은 창작 스튜디오</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #403c58;
+      --muted: #817f97;
+      --purple: #9582db;
+      --purple-deep: #7965ca;
+      --purple-light: #efeaff;
+      --pink: #ffe3ef;
+      --mint: #dcf7ee;
+      --border: rgba(156, 137, 190, .19);
+      --shadow: 0 24px 72px rgba(105, 91, 150, .13);
+    }
+
+    * { box-sizing: border-box; }
+    html { min-width: 320px; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      background:
+        radial-gradient(circle at 7% 11%, #f7dfff 0, transparent 29%),
+        radial-gradient(circle at 96% 16%, #dff8ef 0, transparent 28%),
+        radial-gradient(circle at 80% 95%, #fce6ed 0, transparent 35%),
+        #fbfaff;
+      overflow-x: hidden;
+    }
+    button { font: inherit; }
+    .ambient {
+      position: fixed;
+      z-index: 0;
+      pointer-events: none;
+      font-size: clamp(34px, 5vw, 72px);
+      opacity: .46;
+      filter: blur(.2px);
+      user-select: none;
+    }
+    .ambient.one { top: 13%; left: -13px; color: #d5b0ef; transform: rotate(-14deg); }
+    .ambient.two { right: 2%; top: 48%; color: #f5bcd8; transform: rotate(18deg); }
+    .ambient.three { left: 10%; bottom: 3%; color: #bce5d9; transform: rotate(-12deg); }
+    .app { position: relative; z-index: 1; width: min(1200px, calc(100% - 48px)); margin: 0 auto; }
+
+    .topbar {
+      min-height: 100px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
+    .brand-icon {
+      width: 49px; height: 49px;
+      display: grid; place-items: center;
+      background: linear-gradient(140deg, #d9c7ff, #ffdbe9);
+      box-shadow: 0 8px 22px rgba(183, 148, 218, .24), inset 0 1px rgba(255, 255, 255, .75);
+      border: 2px solid rgba(255,255,255,.83);
+      border-radius: 17px;
+      font-size: 25px;
+    }
+    .brand strong { display: block; font-size: 17px; font-weight: 850; letter-spacing: -.45px; }
+    .brand small { display: block; color: #9692ad; font-size: 11px; letter-spacing: 1.2px; margin-top: 4px; font-weight: 750; }
+    .top-pill {
+      display: inline-flex; gap: 8px; align-items: center;
+      background: rgba(255,255,255,.74); border: 1px solid #fff;
+      border-radius: 999px; padding: 11px 16px;
+      color: #746d9e; font-size: 12px; font-weight: 750;
+      box-shadow: 0 6px 24px rgba(124, 110, 150, .06);
+    }
+    .top-pill .sparkle { color: #f2abcc; font-size: 17px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(300px, .82fr) minmax(0, 1.25fr);
+      gap: 33px;
+      align-items: stretch;
+      padding: 14px 0 30px;
+    }
+    .intro { padding: 40px 2px 10px 12px; display: flex; flex-direction: column; }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      align-self: flex-start; background: rgba(255,255,255,.83);
+      border: 1px solid rgba(255,255,255,.95); padding: 9px 13px;
+      border-radius: 999px; font-size: 12px; color: #a074c4; font-weight: 800;
+      box-shadow: 0 8px 25px rgba(143, 109, 173, .09);
+    }
+    .eyebrow b { color: #f1a7be; }
+    h1 { margin: 29px 0 19px; font-size: clamp(35px, 3.7vw, 53px); letter-spacing: -2.5px; line-height: 1.32; font-weight: 850; }
+    h1 .highlight {
+      background: linear-gradient(95deg, #9f83ea, #ed9ebf);
+      color: transparent; -webkit-background-clip: text; background-clip: text;
+    }
+    .lead { color: #858198; font-size: 15px; line-height: 1.94; letter-spacing: -.3px; max-width: 385px; margin: 0; }
+    .mini-divider { display: flex; align-items: center; gap: 12px; margin: 34px 0 18px; color: #a29ab8; font-size: 12px; font-weight: 800; }
+    .mini-divider::after { content: ''; height: 1px; width: 50px; background: #ded5eb; }
+    .prompt-list { display: grid; gap: 11px; width: min(100%, 385px); }
+    .prompt {
+      width: 100%; border: 1px solid rgba(255,255,255,.95);
+      background: rgba(255,255,255,.68); text-align: left; cursor: pointer;
+      display: flex; gap: 13px; align-items: center;
+      border-radius: 18px; padding: 12px 15px;
+      box-shadow: 0 6px 20px rgba(151, 124, 168, .045);
+      color: #67627f; font-size: 13px; font-weight: 700;
+      transition: transform .2s, background .2s, box-shadow .2s;
+    }
+    .prompt:hover:enabled { background: #fff; transform: translateY(-2px); box-shadow: 0 10px 22px rgba(151, 124, 168, .12); }
+    .prompt:focus-visible, .retry:focus-visible { outline: 3px solid #ac98ed; outline-offset: 3px; }
+    .prompt:disabled { cursor: not-allowed; opacity: .66; }
+    .prompt .emoji { flex: 0 0 37px; height: 37px; border-radius: 12px; display: grid; place-items: center; font-size: 18px; }
+    .prompt:nth-child(1) .emoji { background: #f3e9ff; }
+    .prompt:nth-child(2) .emoji { background: #ffe7ef; }
+    .prompt:nth-child(3) .emoji { background: #e1f6ed; }
+    .prompt .arrow { margin-left: auto; font-size: 18px; color: #b7a7d3; }
+    .tip { margin-top: auto; padding-top: 33px; font-size: 12px; color: #aaa6bd; line-height: 1.7; }
+    .tip span { color: #d6a1c3; margin-right: 4px; }
+
+    .chat-frame {
+      min-width: 0; border: 1px solid rgba(255,255,255,.97); border-radius: 30px;
+      background: rgba(255,255,255,.9); padding: 9px;
+      box-shadow: var(--shadow);
+    }
+    .chat-inner { overflow: hidden; border-radius: 23px; background: #fff; border: 1px solid #f0eaf8; }
+    .chat-head {
+      display: flex; align-items: center; gap: 12px;
+      padding: 17px 20px; min-height: 78px;
+      border-bottom: 1px solid #f0edf5;
+      background: linear-gradient(112deg, #faf5ff 0%, #fff8fb 54%, #f5fffa 100%);
+    }
+    .bot-face {
+      position: relative; display: grid; place-items: center;
+      width: 44px; height: 44px; flex-shrink: 0;
+      border-radius: 16px; background: linear-gradient(145deg, #e1d4ff, #f8dced);
+      box-shadow: inset 0 2px rgba(255,255,255,.8); font-size: 23px;
+    }
+    .bot-face::after { position: absolute; content: ''; height: 8px; width: 8px; bottom: -1px; right: -2px; border: 2px solid white; border-radius: 50%; background: #9fdbbb; }
+    .bot-label { min-width: 0; }
+    .bot-label strong { display: block; font-size: 14px; letter-spacing: -.25px; margin-bottom: 5px; }
+    .bot-label small { display: block; font-size: 11px; color: #918da6; }
+    .chat-head .head-flower { margin-left: auto; font-size: 23px; color: #e8bfdf; padding-right: 3px; }
+
+    .chat-body { position: relative; height: min(620px, 67vh); min-height: 460px; background: #fffeff; }
+    #webchat { width: 100%; height: 100%; }
+    .status-pane {
+      position: absolute; inset: 0; z-index: 4;
+      display: flex; flex-direction: column; gap: 13px;
+      justify-content: center; align-items: center; text-align: center;
+      background: radial-gradient(circle at 50% 40%, #f8f3ff, #fff 75%);
+      padding: 24px;
+    }
+    .status-pane[hidden] { display: none; }
+    .status-icon { width: 70px; height: 70px; border-radius: 25px; display: grid; place-items: center; background: #f1eaff; font-size: 30px; }
+    .status-pane p { color: #77718f; font-size: 13px; line-height: 1.8; max-width: 300px; margin: 0; }
+    .loading-dots { display: flex; gap: 5px; margin-top: 4px; }
+    .loading-dots i { display: block; width: 6px; height: 6px; border-radius: 50%; background: #c6b8eb; animation: bop 1.1s ease-in-out infinite; }
+    .loading-dots i:nth-child(2) { animation-delay: .13s; }
+    .loading-dots i:nth-child(3) { animation-delay: .26s; }
+    @keyframes bop { 0%, 65%, 100% { transform: translateY(0); opacity: .55; } 30% { transform: translateY(-6px); opacity: 1; } }
+    .retry { display: none; border: 0; background: #8e7ad4; color: #fff; padding: 10px 18px; border-radius: 13px; cursor: pointer; font-size: 12px; font-weight: 750; }
+    .retry:hover { background: #7964c8; }
+    .chat-footer {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      min-height: 36px; padding: 9px 12px;
+      color: #aaa1b9; font-size: 10px; background: #fff; border-top: 1px solid #f3eff8;
+    }
+    .chat-footer span { color: #d5b8e9; }
+    .bottom { color: #a9a1b7; padding: 8px 0 24px; text-align: center; font-size: 11px; }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; gap: 26px; padding-top: 5px; }
+      .intro { padding: 10px 5px 0; }
+      .lead { max-width: 620px; }
+      h1 { margin: 19px 0 13px; }
+      .mini-divider { margin: 25px 0 13px; }
+      .prompt-list { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+      .prompt { min-width: 0; align-items: flex-start; gap: 9px; font-size: 11px; padding: 12px 10px; }
+      .prompt .emoji { flex-basis: 28px; height: 28px; border-radius: 9px; font-size: 14px; }
+      .prompt .arrow { display: none; }
+      .tip { display: none; }
+      .chat-body { height: 530px; }
+    }
+    @media (max-width: 560px) {
+      .app { width: min(100% - 24px, 450px); }
+      .topbar { min-height: 78px; }
+      .brand-icon { width: 43px; height: 43px; border-radius: 14px; }
+      .brand strong { font-size: 15px; }
+      .brand small { font-size: 9px; }
+      .top-pill { font-size: 10px; padding: 8px 10px; }
+      h1 { font-size: clamp(31px, 9vw, 43px); letter-spacing: -1.8px; }
+      .lead { font-size: 13px; }
+      .prompt-list { grid-template-columns: 1fr; gap: 7px; }
+      .prompt { align-items: center; font-size: 12px; }
+      .prompt .emoji { flex-basis: 31px; height: 31px; }
+      .prompt .arrow { display: block; }
+      .chat-frame { border-radius: 23px; padding: 5px; }
+      .chat-inner { border-radius: 19px; }
+      .chat-head { padding: 13px 14px; }
+      .chat-body { height: min(570px, 66vh); min-height: 430px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
 </head>
 <body>
-  <p id="status" role="status" aria-live="polite">채팅에 연결하는 중입니다...</p>
-  <div id="webchat" style="height: 600px"></div>
+  <div class="ambient one" aria-hidden="true">✿</div>
+  <div class="ambient two" aria-hidden="true">✧</div>
+  <div class="ambient three" aria-hidden="true">✿</div>
+
+  <div class="app">
+    <header class="topbar">
+      <a class="brand" href="#main" aria-label="AI Creative Agent 홈으로 이동">
+        <span class="brand-icon" aria-hidden="true">🌷</span>
+        <span><strong>AI Creative Agent</strong><small>YOUR LITTLE CREATIVE SPACE</small></span>
+      </a>
+      <div class="top-pill"><span class="sparkle" aria-hidden="true">✦</span> 오늘도 반짝이는 아이디어</div>
+    </header>
+
+    <main id="main" class="layout">
+      <section class="intro" aria-labelledby="headline">
+        <div class="eyebrow"><b>✿</b> Hello, Creator!</div>
+        <h1 id="headline">상상을 말하면,<br><span class="highlight">창작이 시작돼요.</span> ✨</h1>
+        <p class="lead">머릿속에 떠오른 작은 아이디어도 괜찮아요.<br>AI 크리에이티브 에이전트와 함께 이야기를 나누며<br>나만의 멋진 작업을 만들어 보세요.</p>
+        <div class="mini-divider">이런 이야기부터 시작해 봐요</div>
+        <div class="prompt-list" aria-label="대화 시작 예시">
+          <button class="prompt" type="button" data-prompt="캐릭터 Idle 애니메이션을 만들고 싶어. 어디서부터 시작할까?" disabled>
+            <span class="emoji" aria-hidden="true">🎀</span><span>캐릭터 Idle 애니메이션을 만들고 싶어!</span><span class="arrow" aria-hidden="true">↗</span>
+          </button>
+          <button class="prompt" type="button" data-prompt="걷는 동작을 더 자연스럽게 만들려면 어떻게 해야 할까?" disabled>
+            <span class="emoji" aria-hidden="true">🧸</span><span>걷는 동작을 더 자연스럽게 하고 싶어!</span><span class="arrow" aria-hidden="true">↗</span>
+          </button>
+          <button class="prompt" type="button" data-prompt="애니메이션 키프레임의 원리를 쉽게 설명해 줘." disabled>
+            <span class="emoji" aria-hidden="true">🌼</span><span>키프레임이 뭔지 쉽게 알려줘!</span><span class="arrow" aria-hidden="true">↗</span>
+          </button>
+        </div>
+        <div class="tip"><span>♡</span> 원하는 이야기를 자유롭게 적어 주세요. 작은 질문도 환영해요.</div>
+      </section>
+
+      <section class="chat-frame" aria-label="AI 에이전트 채팅">
+        <div class="chat-inner">
+          <div class="chat-head">
+            <div class="bot-face" aria-hidden="true">🐰</div>
+            <div class="bot-label"><strong>크리에이티브 도우미</strong><small id="connection-label">연결하고 있어요 ···</small></div>
+            <span class="head-flower" aria-hidden="true">✿</span>
+          </div>
+          <div class="chat-body">
+            <div id="webchat" aria-label="AI 채팅 대화창"></div>
+            <div id="status-pane" class="status-pane" role="status" aria-live="polite">
+              <div class="status-icon" aria-hidden="true">💌</div>
+              <p id="status">채팅에 연결하는 중이에요. 잠시만요!</p>
+              <div id="loading-dots" class="loading-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+              <button id="retry" class="retry" type="button">다시 시도하기 ↗</button>
+            </div>
+          </div>
+          <div class="chat-footer"><span>✦</span> A little magic for your big ideas <span>✦</span></div>
+        </div>
+      </section>
+    </main>
+    <footer class="bottom">Made for dreamers, makers & curious minds ♡</footer>
+  </div>
+
   <script src="https://cdn.botframework.com/botframework-webchat/4.18.0/webchat.js"></script>
   <script>
     const BROKER_URL = "https://dl-broker-juwon-4jt3z.azurewebsites.net/api/directlineToken";
     const SEALED = "m4Cu0FK0F0zDeZ8VQRxoNroBjTrILfHJ_Kg2lMbj9iiBVhEYi8wdAPb76wHhktPc7JWnVdCP_5ALaaYEPLgTEmJktH3lLztmR1gM5FMgWVXGFfim1ALgCMOXCeY7MZTJijECkdlCc5k_55SUeLkAHeBCIeZS4TfrPfXRGbvKyy8pwcnIM7Bb-DbuUQX75-ZFcvdgJBKl3FuOdTXCrD9oXbAbJPuEsgEYXhRX6RnxScMUPYIMgVoejNcjNxhlOFMOlrZmqo8ktUZo8bn6xraG4-tm9Rn6Pl5bq-esCescyUhyW1f6-sWfNglDsAd3I9PZdRFenjtsxGkktMm3XFyxJzPd5g0HbTXKDxrYlRPEPqvnICLZagbgi1Ug0EQ3WyIuWJE4OTnIgKcvh9PdgIMK658RMh1hMDqIrpw9b3uwBd-U9dF-V7UaW1OEtOo_n2uRpf4hiHuyNpnKvyljurshwVzv--w0rOCMZLh7dMP_sSptiKmYYKzdu7wInxOSC8TcSBxxFZ5M3Dtj3bCOEqxSW27_LzBbSFoEQydgWuSwnTJK_nluSgxPGDjKLYo_euZXsJm9FQgaExW5-OB-AwuAgs80veqRG2oJr9YTqVRM8mepilE1ehuI1whoyYq-JTa80WGfAjl-qaYAjHYypLPXOvU";
-    const status = document.getElementById("status");
+
+    const statusPane = document.getElementById("status-pane");
+    const statusText = document.getElementById("status");
+    const connectionLabel = document.getElementById("connection-label");
+    const retryButton = document.getElementById("retry");
+    const loadingDots = document.getElementById("loading-dots");
+    const promptButtons = document.querySelectorAll("[data-prompt]");
+    let directLine = null;
+    const userId = "user";
 
     function showError(message) {
-      status.hidden = false;
-      status.textContent = message;
+      statusPane.hidden = false;
+      statusText.textContent = message;
+      connectionLabel.textContent = "연결에 문제가 생겼어요";
+      loadingDots.hidden = true;
+      loadingDots.style.display = "none";
+      retryButton.style.display = "inline-block";
+      promptButtons.forEach(button => { button.disabled = true; });
     }
 
     async function connect() {
       if (!window.WebChat ||
           typeof WebChat.createDirectLine !== "function" ||
           typeof WebChat.renderWebChat !== "function") {
-        showError("채팅 구성 요소를 불러오지 못했습니다. 네트워크를 확인한 뒤 새로고침해 주세요.");
+        showError("채팅 구성 요소를 불러오지 못했어요. 네트워크를 확인한 뒤 다시 시도해 주세요.");
         return;
       }
 
       let response;
       try {
-        // Keep this a simple CORS request; the broker may not support preflight.
+        // Content-Type을 지정하지 않아 단순 CORS 요청을 유지합니다.
+        // 브로커가 preflight를 처리하지 않는 경우에도 기존 코드처럼 동작합니다.
         response = await fetch(BROKER_URL, {
           method: "POST",
           body: JSON.stringify({ sealed: SEALED })
         });
       } catch {
-        showError("서버에 연결하지 못했습니다. 네트워크와 배포 주소를 확인해 주세요.");
+        showError("서버에 연결하지 못했어요. 네트워크와 배포 주소를 확인해 주세요.");
         return;
       }
+
       if (!response.ok) {
-        showError("서버가 연결 요청을 처리하지 못했습니다 (HTTP " + response.status + ").");
+        showError("서버가 연결 요청을 처리하지 못했어요. (HTTP " + response.status + ")");
         return;
       }
 
@@ -47,28 +320,83 @@
       try {
         data = await response.json();
       } catch {
-        showError("서버 응답을 읽을 수 없습니다. 잠시 후 다시 시도해 주세요.");
+        showError("서버의 응답을 읽을 수 없어요. 잠시 후 다시 시도해 주세요.");
         return;
       }
       if (!data || typeof data.token !== "string" || !data.token.trim()) {
-        showError("서버에서 연결 토큰을 받지 못했습니다. 암호와 배포 주소를 확인해 주세요.");
+        showError("연결 토큰을 받지 못했어요. 서버 설정과 배포 주소를 확인해 주세요.");
         return;
       }
 
       try {
-        const directLine = WebChat.createDirectLine({ token: data.token });
-        status.hidden = true;
+        directLine = WebChat.createDirectLine({ token: data.token });
+        WebChat.renderWebChat({
+          directLine,
+          locale: "ko-KR",
+          styleOptions: {
+            accent: "#9078d7",
+            backgroundColor: "#fffefe",
+            primaryFont: '"Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", sans-serif',
+            botAvatarInitials: "AI",
+            userAvatarInitials: "나",
+            botAvatarBackgroundColor: "#e8ddff",
+            botAvatarColor: "#7563af",
+            userAvatarBackgroundColor: "#fbddec",
+            userAvatarColor: "#916a84",
+            bubbleBackground: "#f5f0ff",
+            bubbleFromUserBackground: "#e9f8f1",
+            bubbleBorderColor: "#eee6ff",
+            bubbleFromUserBorderColor: "#dcf2e8",
+            bubbleTextColor: "#4d4663",
+            bubbleFromUserTextColor: "#445b52",
+            bubbleBorderRadius: 17,
+            bubbleFromUserBorderRadius: 17,
+            sendBoxBackground: "#fffaff",
+            sendBoxTextColor: "#514b66",
+            sendBoxButtonColor: "#9078d7",
+            sendBoxBorderTop: "1px solid #f1eafa",
+            suggestedActionBackground: "#f7f0ff",
+            suggestedActionTextColor: "#6c5fa7",
+            hideUploadButton: true
+          }
+        }, document.getElementById("webchat"));
+
+        statusPane.hidden = true;
+        connectionLabel.textContent = "함께 이야기할 준비가 됐어요 ♡";
+        promptButtons.forEach(button => { button.disabled = false; });
         directLine.postActivity({
-          type: "event", name: "startConversation", from: { id: "user" }
+          type: "event", name: "startConversation", from: { id: userId }
         }).subscribe({
-          error: () => showError("첫 인사를 요청하지 못했습니다. 채팅창에 메시지를 입력해 주세요.")
+          error: () => {
+            // 채팅창은 이용 가능하므로 전체 UI를 가리지 않고 상태 문구만 알립니다.
+            connectionLabel.textContent = "채팅창에서 먼저 메시지를 보내 주세요";
+          }
         });
-        WebChat.renderWebChat({ directLine, locale: "ko-KR" }, document.getElementById("webchat"));
       } catch {
-        showError("채팅을 시작하지 못했습니다. 새로고침 후 다시 시도해 주세요.");
+        showError("채팅을 시작하지 못했어요. 다시 시도해 주세요.");
       }
     }
 
+    promptButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        if (!directLine) return;
+        button.disabled = true;
+        directLine.postActivity({
+          type: "message", from: { id: userId }, text: button.dataset.prompt
+        }).subscribe({
+          next: () => { button.disabled = false; },
+          error: () => {
+            button.disabled = false;
+            connectionLabel.textContent = "메시지를 보내지 못했어요. 다시 시도해 주세요";
+          }
+        });
+        if (window.matchMedia("(max-width: 900px)").matches) {
+          document.querySelector(".chat-frame").scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    });
+
+    retryButton.addEventListener("click", () => window.location.reload());
     connect();
   </script>
 </body>
